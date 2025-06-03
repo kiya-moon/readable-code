@@ -1,5 +1,6 @@
 package cleancode.minesweeper.tobe;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -18,6 +19,7 @@ public class MinesweeperGame {
     public static final String LAND_MINE_SIGN = "☼";
     public static final String CLOSED_CELL_SIGN = "□";
     public static final String OPENED_CELL_SIGN = "■";
+    public static final Scanner SCANNER = new Scanner(System.in);
     private static final String[][] BOARD = new String[BOARD_ROW_SIZE][BOARD_COL_SIZE];
     private static final Integer[][] NEARBY_LAND_MINE_COUNTS = new Integer[BOARD_ROW_SIZE][BOARD_COL_SIZE];
     private static final boolean[][] LAND_MINES = new boolean[BOARD_ROW_SIZE][BOARD_COL_SIZE];
@@ -26,7 +28,6 @@ public class MinesweeperGame {
 
     public static void main(String[] args) {
         showGameStartComments();
-        Scanner scanner = new Scanner(System.in);
         initializeGame();
         while (true) {
             System.out.println("   a b c d e f g h i j");
@@ -40,8 +41,10 @@ public class MinesweeperGame {
                 break;
             }
             System.out.println();
-            String cellInput = getCellInputFromUser(scanner);
-            String userActionInput = getUserActionInputFromUser(scanner);
+//            Scanner scanner = new Scanner(System.in);   // Scanner 선언과 사용하는 곳이 멀어 가까이로 가져왔지만, for문 안이기 때문에 매번 선언이 됨
+                                                          // >>> Scanner는 한 번만 선언하면 재사용 할 수 있기 때문에 상수화
+            String cellInput = getCellInputFromUser();
+            String userActionInput = getUserActionInputFromUser();
             actOnCell(cellInput, userActionInput);
         }
     }
@@ -95,16 +98,14 @@ public class MinesweeperGame {
         return selectedColIndex;
     }
 
-    private static String getUserActionInputFromUser(Scanner scanner) {
+    private static String getUserActionInputFromUser() {
         System.out.println("선택한 셀에 대한 행위를 선택하세요. (1: 오픈, 2: 깃발 꽂기)");
-        String userActionInput = scanner.nextLine();
-        return userActionInput;
+        return SCANNER.nextLine();
     }
 
-    private static String getCellInputFromUser(Scanner scanner) {
+    private static String getCellInputFromUser() {
         System.out.println("선택할 좌표를 입력하세요. (예: a1)");
-        String cellInput = scanner.nextLine();
-        return cellInput;
+        return SCANNER.nextLine();
     }
 
     private static boolean doesUserLoseTheGame() {
@@ -133,16 +134,13 @@ public class MinesweeperGame {
         gameStatus = 1;
     }
 
-    private static boolean isAllCellOpened() {
-        boolean isAllOpened = true;
-        for (int row = 0; row < BOARD_ROW_SIZE; row++) {
-            for (int col = 0; col < BOARD_COL_SIZE; col++) {
-                if (BOARD[row][col].equals(CLOSED_CELL_SIGN)) {
-                    isAllOpened = false;
-                }
-            }
-        }
-        return isAllOpened;
+    // 메서드 리팩토링 Tip!
+    // 리팩토링 할 메서드가 여러 곳에서 사용하고 있다면 바꾸었을 때 사이드 이펙트가 발생할 수 도 있다.
+    // 따라서, 리팩토링 할 메서드를 복제해서 수정 후, 수정한 메서드로 변경 + 테스트를 반복해서 최종적으로 적용해야 한다.
+    private static boolean isAllCellOpened() {  // 중첩 반복문을 사용하지 않고, 스트림을 사용하여 가독성을 높임
+        return Arrays.stream(BOARD)
+                .flatMap(Arrays::stream)
+                .noneMatch(cell -> cell.equals(CLOSED_CELL_SIGN)); // 모든 cell이 오픈되어 있는지 확인
     }
 
     private static int convertRowFrom(char cellInputRow) {  // 코드의 양으로 추상화 여부를 결정하는 게 아니라, 같은 메서드 내에서 추상화 레벨을 맞춰준다는 목적으로 접근해야 한다
