@@ -11,7 +11,6 @@ import java.util.Scanner;
  */
 public class MinesweeperGame {
 
-
     public static final int BOARD_ROW_SIZE = 8;
     public static final int BOARD_COL_SIZE = 10;
     public static final int LAND_MINE_COUNT = 10;
@@ -29,9 +28,11 @@ public class MinesweeperGame {
     public static void main(String[] args) {
         showGameStartComments();
         initializeGame();
+
         while (true) {
             System.out.println("   a b c d e f g h i j");
             showBoard();
+
             if (doesUserWinTheGame()) { // 구체적이었던 조건문을 추상화하여 추상레벨을 맞춰주기
                 System.out.println("지뢰를 모두 찾았습니다. GAME CLEAR!");
                 break;
@@ -40,7 +41,9 @@ public class MinesweeperGame {
                 System.out.println("지뢰를 밟았습니다. GAME OVER!");
                 break;
             }
+
             System.out.println();
+
 //            Scanner scanner = new Scanner(System.in);   // Scanner 선언과 사용하는 곳이 멀어 가까이로 가져왔지만, for문 안이기 때문에 매번 선언이 됨
                                                           // >>> Scanner는 한 번만 선언하면 재사용 할 수 있기 때문에 상수화
             String cellInput = getCellInputFromUser();
@@ -52,17 +55,20 @@ public class MinesweeperGame {
     private static void actOnCell(String cellInput, String userActionInput) {
         int selectedColIndex = getSelectedColIndex(cellInput);
         int selectedRowIndex = getSelectedRowIndex(cellInput);
+
         if (doesUserChooseToPlantFlag(userActionInput)) {
             BOARD[selectedRowIndex][selectedColIndex] = FLAG_SIGN;
             checkIfGameIsOver();
             return;
         }
+
         if (doesUserChooseToOpenCell(userActionInput)) {
             if (isLandMineCell(selectedRowIndex, selectedColIndex)) {    // 사용자가 지뢰 cell을 밟았다면 game over
                 BOARD[selectedRowIndex][selectedColIndex] = LAND_MINE_SIGN;
                 changeGameStatusToLose();
                 return;
             }
+
             open(selectedRowIndex, selectedColIndex);
             checkIfGameIsOver();
             return;
@@ -192,11 +198,13 @@ public class MinesweeperGame {
                 BOARD[row][col] = CLOSED_CELL_SIGN;
             }
         }
+
         for (int i = 0; i < LAND_MINE_COUNT; i++) {  // 여기 i는 그냥 단순 반복 횟수를 의미 하므로 수정x
             int col = new Random().nextInt(BOARD_COL_SIZE);
             int row = new Random().nextInt(BOARD_ROW_SIZE);
             LAND_MINES[row][col] = true;
         }
+
         for (int row = 0; row < BOARD_ROW_SIZE; row++) {
             for (int col = 0; col < BOARD_COL_SIZE; col++) {
                 int count = 0;
