@@ -3,6 +3,10 @@ package cleancode.minesweeper.tobe;
 import java.util.Random;
 import java.util.Scanner;
 
+/**
+ * 이름 변경 : shift + F6(macOS), F6 (Windows/Linux)
+ * 메서드 추출 : option + command + M (macOS), ctrl + alt + M (Windows/Linux)
+ */
 public class MinesweeperGame {
 
     private static String[][] board = new String[8][10];
@@ -11,10 +15,117 @@ public class MinesweeperGame {
     private static int gameStatus = 0; // 0: 게임 중, 1: 승리, -1: 패배
 
     public static void main(String[] args) {
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        System.out.println("지뢰찾기 게임 시작!");
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        showGameStartComments();
         Scanner scanner = new Scanner(System.in);
+        initializeGame();
+        while (true) {
+            System.out.println("   a b c d e f g h i j");
+            showBoard();
+            if (gameStatus == 1) {
+                System.out.println("지뢰를 모두 찾았습니다. GAME CLEAR!");
+                break;
+            }
+            if (gameStatus == -1) {
+                System.out.println("지뢰를 밟았습니다. GAME OVER!");
+                break;
+            }
+            System.out.println();
+            System.out.println("선택할 좌표를 입력하세요. (예: a1)");
+            String cellInput = scanner.nextLine();
+            System.out.println("선택한 셀에 대한 행위를 선택하세요. (1: 오픈, 2: 깃발 꽂기)");
+            String userActionInput = scanner.nextLine();
+            char cellInputCol = cellInput.charAt(0);
+            char cellInputRow = cellInput.charAt(1);
+            int selectedColIndex = convertColFrom(cellInputCol);    // 메서드명과 파라미터를 연결 지어서 변경. cellInputCol로부터 컬럼 변환할거야
+            int selectedRowIndex = convertRowFrom(cellInputRow);
+            if (userActionInput.equals("2")) {
+                board[selectedRowIndex][selectedColIndex] = "⚑";
+                checkIfGameIsOver();
+            } else if (userActionInput.equals("1")) {
+                if (landMines[selectedRowIndex][selectedColIndex]) {    // 사용자가 지뢰 cell을 밟았다면 game over
+                    board[selectedRowIndex][selectedColIndex] = "☼";
+                    gameStatus = -1;
+                    continue;
+                } else {
+                    open(selectedRowIndex, selectedColIndex);
+                }
+                checkIfGameIsOver();
+            } else {
+                System.out.println("잘못된 번호를 선택하셨습니다.");
+            }
+        }
+    }
+
+//    private static void checkIfAllCell() {
+//        boolean isAllOpened = isAllOpened();    // cell이 모두 오픈되어 있는 지 체크하는 역할
+//        if (isAllOpened) {
+//            gameStatus = 1; // 게임 종료 선언 역할
+//        }
+//    }   // >>> 한 메서드 안에 두 개의 역할이 있음
+
+    private static void checkIfGameIsOver() {
+        boolean isAllOpened = isAllCellOpened();    // check~ 라는 이름의 메서드는 보통 void 타입이기 때문에, boolean 타입을 반환하는 역할에 맞게 이름 변경
+        if (isAllOpened) {
+            gameStatus = 1;
+        }
+    }   // >>> 역할에 맞도록 이름 변경
+
+    private static boolean isAllCellOpened() {
+        boolean isAllOpened = true;
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 10; col++) {
+                if (board[row][col].equals("□")) {
+                    isAllOpened = false;
+                }
+            }
+        }
+        return isAllOpened;
+    }
+
+    private static int convertRowFrom(char cellInputRow) {  // 코드의 양으로 추상화 여부를 결정하는 게 아니라, 같은 메서드 내에서 추상화 레벨을 맞춰준다는 목적으로 접근해야 한다
+        return Character.getNumericValue(cellInputRow) - 1;
+    }
+
+    private static int convertColFrom(char cellInputCol) {
+        switch (cellInputCol) {
+            case 'a':
+//                selectedColIndex = 0;
+//                break;
+                return 0;
+            case 'b':
+                return 1;
+            case 'c':
+                 return 2;
+            case 'd':
+                return 3;
+            case 'e':
+                return 4;
+            case 'f':
+                return 5;
+            case 'g':
+                return 6;
+            case 'h':
+                return 7;
+            case 'i':
+                return 8;
+            case 'j':
+                return 9;
+            default:
+                return -1;
+        }
+    }
+
+    private static void showBoard() {
+        for (int row = 0; row < 8; row++) {
+            System.out.printf("%d  ", row + 1);
+            for (int col = 0; col < 10; col++) {
+                System.out.print(board[row][col] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    private static void initializeGame() {
         for (int row = 0; row < 8; row++) { // 반목문의 i, j를 의미 있는 단어로 변경
             for (int col = 0; col < 10; col++) {
                 board[row][col] = "□";
@@ -59,103 +170,12 @@ public class MinesweeperGame {
                 landMineCounts[row][col] = 0;
             }
         }
-        while (true) {
-            System.out.println("   a b c d e f g h i j");
-            for (int row = 0; row < 8; row++) {
-                System.out.printf("%d  ", row + 1);
-                for (int col = 0; col < 10; col++) {
-                    System.out.print(board[row][col] + " ");
-                }
-                System.out.println();
-            }
-            if (gameStatus == 1) {
-                System.out.println("지뢰를 모두 찾았습니다. GAME CLEAR!");
-                break;
-            }
-            if (gameStatus == -1) {
-                System.out.println("지뢰를 밟았습니다. GAME OVER!");
-                break;
-            }
-            System.out.println();
-            System.out.println("선택할 좌표를 입력하세요. (예: a1)");
-            String cellInput = scanner.nextLine();
-            System.out.println("선택한 셀에 대한 행위를 선택하세요. (1: 오픈, 2: 깃발 꽂기)");
-            String userActionInput = scanner.nextLine();
-            char cellInputCol = cellInput.charAt(0);
-            char cellInputRow = cellInput.charAt(1);
-            int selectedColIndex;
-            switch (cellInputCol) {
-                case 'a':
-                    selectedColIndex = 0;
-                    break;
-                case 'b':
-                    selectedColIndex = 1;
-                    break;
-                case 'c':
-                    selectedColIndex = 2;
-                    break;
-                case 'd':
-                    selectedColIndex = 3;
-                    break;
-                case 'e':
-                    selectedColIndex = 4;
-                    break;
-                case 'f':
-                    selectedColIndex = 5;
-                    break;
-                case 'g':
-                    selectedColIndex = 6;
-                    break;
-                case 'h':
-                    selectedColIndex = 7;
-                    break;
-                case 'i':
-                    selectedColIndex = 8;
-                    break;
-                case 'j':
-                    selectedColIndex = 9;
-                    break;
-                default:
-                    selectedColIndex = -1;
-                    break;
-            }
-            int selectedRowIndex = Character.getNumericValue(cellInputRow) - 1;
-            if (userActionInput.equals("2")) {
-                board[selectedRowIndex][selectedColIndex] = "⚑";
-                boolean isAllOpened = true;
-                for (int row = 0; row < 8; row++) {
-                    for (int col = 0; col < 10; col++) {
-                        if (board[row][col].equals("□")) {
-                            isAllOpened = false;
-                        }
-                    }
-                }
-                if (isAllOpened) { // 게임판의 모든 cell이 오픈되어 있다면 게임 종료
-                    gameStatus = 1;
-                }
-            } else if (userActionInput.equals("1")) {
-                if (landMines[selectedRowIndex][selectedColIndex]) {    // 사용자가 지뢰 cell을 밟았다면 game over
-                    board[selectedRowIndex][selectedColIndex] = "☼";
-                    gameStatus = -1;
-                    continue;
-                } else {
-                    open(selectedRowIndex, selectedColIndex);
-                }
-                boolean isAllOpened = true;
-                for (int i = 0; i < 8; i++) {
-                    for (int j = 0; j < 10; j++) {
-                        if (board[i][j].equals("□")) {
-                            isAllOpened = false;
-                        }
-                    }
-                }
-                if (isAllOpened) {
-                    gameStatus = 1;
-                }
-            } else {
-                System.out.println("잘못된 번호를 선택하셨습니다.");
-            }
-        }
+    }
+
+    private static void showGameStartComments() {
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println("지뢰찾기 게임 시작!");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
     }
 
     // 재귀함수 - 종단 조건 설정을 잘 해놓지 않는다면 스택 오버 플로우 등이 발생할 수 있다
