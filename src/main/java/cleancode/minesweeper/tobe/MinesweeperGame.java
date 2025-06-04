@@ -8,6 +8,7 @@ import java.util.Scanner;
  * 이름 변경 : shift + F6(macOS), F6 (Windows/Linux)
  * 메서드 추출 : option + command + M (macOS), ctrl + alt + M (Windows/Linux)
  * 상수로 추출 : option + command + C (macOS), ctrl + alt + C (Windows/Linux)
+ * try ~ catch 블록 추가 : option + command + T (macOS), ctrl + alt + T (Windows/Linux)
  */
 public class MinesweeperGame {
 
@@ -30,25 +31,31 @@ public class MinesweeperGame {
         initializeGame();
 
         while (true) {
-            System.out.println("   a b c d e f g h i j");
-            showBoard();
+            try {
+                System.out.println("   a b c d e f g h i j");
+                showBoard();
 
-            if (doesUserWinTheGame()) { // 구체적이었던 조건문을 추상화하여 추상레벨을 맞춰주기
-                System.out.println("지뢰를 모두 찾았습니다. GAME CLEAR!");
-                break;
-            }
-            if (doesUserLoseTheGame()) {
-                System.out.println("지뢰를 밟았습니다. GAME OVER!");
-                break;
-            }
+                if (doesUserWinTheGame()) { // 구체적이었던 조건문을 추상화하여 추상레벨을 맞춰주기
+                    System.out.println("지뢰를 모두 찾았습니다. GAME CLEAR!");
+                    break;
+                }
+                if (doesUserLoseTheGame()) {
+                    System.out.println("지뢰를 밟았습니다. GAME OVER!");
+                    break;
+                }
 
-            System.out.println();
+                System.out.println();
 
 //            Scanner scanner = new Scanner(System.in);   // Scanner 선언과 사용하는 곳이 멀어 가까이로 가져왔지만, for문 안이기 때문에 매번 선언이 됨
-                                                          // >>> Scanner는 한 번만 선언하면 재사용 할 수 있기 때문에 상수화
-            String cellInput = getCellInputFromUser();
-            String userActionInput = getUserActionInputFromUser();
-            actOnCell(cellInput, userActionInput);
+                // >>> Scanner는 한 번만 선언하면 재사용 할 수 있기 때문에 상수화
+                String cellInput = getCellInputFromUser();
+                String userActionInput = getUserActionInputFromUser();
+                actOnCell(cellInput, userActionInput);
+            } catch (AppException e) {
+                System.out.println(e.getMessage());
+            } catch (Exception e) {
+                System.out.println("프로그램에 문제가 생겼습니다.");
+            }
         }
     }
 
@@ -73,7 +80,7 @@ public class MinesweeperGame {
             checkIfGameIsOver();
             return;
         }
-        System.out.println("잘못된 번호를 선택하셨습니다.");
+        throw new AppException("잘못된 번호를 선택하셨습니다.");
     }
 
     private static void changeGameStatusToLose() {
@@ -146,11 +153,15 @@ public class MinesweeperGame {
     private static boolean isAllCellOpened() {  // 중첩 반복문을 사용하지 않고, 스트림을 사용하여 가독성을 높임
         return Arrays.stream(BOARD)
                 .flatMap(Arrays::stream)
-                .noneMatch(cell -> cell.equals(CLOSED_CELL_SIGN)); // 모든 cell이 오픈되어 있는지 확인
+                .noneMatch(CLOSED_CELL_SIGN::equals); // 모든 cell이 오픈되어 있는지 확인
     }
 
     private static int convertRowFrom(char cellInputRow) {  // 코드의 양으로 추상화 여부를 결정하는 게 아니라, 같은 메서드 내에서 추상화 레벨을 맞춰준다는 목적으로 접근해야 한다
-        return Character.getNumericValue(cellInputRow) - 1;
+        int rowIndex = Character.getNumericValue(cellInputRow) - 1;
+        if (rowIndex >= BOARD_ROW_SIZE) {
+            throw new AppException("잘못된 입력입니다.");
+        }
+        return rowIndex;
     }
 
     private static int convertColFrom(char cellInputCol) {
@@ -178,7 +189,7 @@ public class MinesweeperGame {
             case 'j':
                 return 9;
             default:
-                return -1;
+                throw new AppException("잘못된 입력입니다.");
         }
     }
 
