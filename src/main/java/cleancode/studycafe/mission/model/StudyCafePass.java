@@ -1,19 +1,21 @@
-package cleancode.studycafe.tobe.model;
+package cleancode.studycafe.mission.model;
 
-public class StudyCafeLockerPass {
+public class StudyCafePass {
 
     private final StudyCafePassType passType;
     private final int duration;
     private final int price;
+    private final double discountRate;
 
-    private StudyCafeLockerPass(StudyCafePassType passType, int duration, int price) {
+    private StudyCafePass(StudyCafePassType passType, int duration, int price, double discountRate) {
         this.passType = passType;
         this.duration = duration;
         this.price = price;
+        this.discountRate = discountRate;
     }
 
-    public static StudyCafeLockerPass of(StudyCafePassType passType, int duration, int price) {
-        return new StudyCafeLockerPass(passType, duration, price);
+    public static StudyCafePass of(StudyCafePassType passType, int duration, int price, double discountRate) {
+        return new StudyCafePass(passType, duration, price, discountRate);
     }
 
     public StudyCafePassType getPassType() {
@@ -26,6 +28,10 @@ public class StudyCafeLockerPass {
 
     public int getPrice() {
         return price;
+    }
+
+    public double getDiscountRate() {
+        return discountRate;
     }
 
     public String display() {
