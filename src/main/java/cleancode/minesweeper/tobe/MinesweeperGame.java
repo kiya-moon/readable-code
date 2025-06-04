@@ -15,12 +15,8 @@ public class MinesweeperGame {
     public static final int BOARD_ROW_SIZE = 8;
     public static final int BOARD_COL_SIZE = 10;
     public static final int LAND_MINE_COUNT = 10;
-    public static final String FLAG_SIGN = "⚑";
-    public static final String LAND_MINE_SIGN = "☼";
-    public static final String CLOSED_CELL_SIGN = "□";
-    public static final String OPENED_CELL_SIGN = "■";
     public static final Scanner SCANNER = new Scanner(System.in);
-    private static final String[][] BOARD = new String[BOARD_ROW_SIZE][BOARD_COL_SIZE];
+    private static final Cell[][] BOARD = new Cell[BOARD_ROW_SIZE][BOARD_COL_SIZE];
     private static final Integer[][] NEARBY_LAND_MINE_COUNTS = new Integer[BOARD_ROW_SIZE][BOARD_COL_SIZE];
     private static final boolean[][] LAND_MINES = new boolean[BOARD_ROW_SIZE][BOARD_COL_SIZE];
 
@@ -64,14 +60,15 @@ public class MinesweeperGame {
         int selectedRowIndex = getSelectedRowIndex(cellInput);
 
         if (doesUserChooseToPlantFlag(userActionInput)) {
-            BOARD[selectedRowIndex][selectedColIndex] = FLAG_SIGN;
+//            BOARD[selectedRowIndex][selectedColIndex] = Cell.of(FLAG_SIGN); // FLAG_SIGN 선언을 Cell 내부로 옮겼으므로 ofFlag() 메서드를 만든다
+            BOARD[selectedRowIndex][selectedColIndex] = Cell.ofFlag();
             checkIfGameIsOver();
             return;
         }
 
         if (doesUserChooseToOpenCell(userActionInput)) {
             if (isLandMineCell(selectedRowIndex, selectedColIndex)) {    // 사용자가 지뢰 cell을 밟았다면 game over
-                BOARD[selectedRowIndex][selectedColIndex] = LAND_MINE_SIGN;
+                BOARD[selectedRowIndex][selectedColIndex] = Cell.ofLandMine();
                 changeGameStatusToLose();
                 return;
             }
@@ -153,7 +150,10 @@ public class MinesweeperGame {
     private static boolean isAllCellOpened() {  // 중첩 반복문을 사용하지 않고, 스트림을 사용하여 가독성을 높임
         return Arrays.stream(BOARD)
                 .flatMap(Arrays::stream)
-                .noneMatch(CLOSED_CELL_SIGN::equals); // 모든 cell이 오픈되어 있는지 확인
+//                .noneMatch(cell -> cell.getSign().equals(CLOSED_CELL_SIGN));    // cell이 객체니까 sign을 가져오기 위해 get 사용?
+                                                                                // 객체에서 get으로 데이터를 강탈해오는 무례한 일이므로 정중하게 묻는 것부터 하자
+                                                                                // 캡슐화 되어 있는 데이터를 밖에서 알고 있다고 생각하면 안됨
+                .noneMatch(Cell::isClosed);  // Cell 객체가 sign을 가지고 있으므로, Cell 클래스에 equalsSign 메서드를 만들어서 사용
     }
 
     private static int convertRowFrom(char cellInputRow) {  // 코드의 양으로 추상화 여부를 결정하는 게 아니라, 같은 메서드 내에서 추상화 레벨을 맞춰준다는 목적으로 접근해야 한다
@@ -197,7 +197,8 @@ public class MinesweeperGame {
         for (int row = 0; row < BOARD_ROW_SIZE; row++) {
             System.out.printf("%d  ", row + 1);
             for (int col = 0; col < BOARD_COL_SIZE; col++) {
-                System.out.print(BOARD[row][col] + " ");
+                System.out.print(BOARD[row][col].getSign() + " "); // Cell 객체 내부에서 보드를 그리고 System.out.print() 하는 것은 이상하므로,
+                                                                    // 여기서는 Cell 객체에게 데이터 줘! 내가 그려줄게! 하는 것이 맞다.
             }
             System.out.println();
         }
@@ -206,7 +207,7 @@ public class MinesweeperGame {
     private static void initializeGame() {
         for (int row = 0; row < BOARD_ROW_SIZE; row++) { // 반목문의 i, j를 의미 있는 단어로 변경
             for (int col = 0; col < BOARD_COL_SIZE; col++) {
-                BOARD[row][col] = CLOSED_CELL_SIGN;
+                BOARD[row][col] = Cell.ofClosed();
             }
         }
 
@@ -270,17 +271,17 @@ public class MinesweeperGame {
         if (row < 0 || row >= BOARD_ROW_SIZE || col < 0 || col >= BOARD_COL_SIZE) {  // 보드 범위를 벗어나면 정상적이지 않으므로 return
             return;
         }
-        if (!BOARD[row][col].equals(CLOSED_CELL_SIGN)) { // 이미 오픈된 cell이라면 return
+        if (BOARD[row][col].doseNotClosed()) { // 이미 오픈된 cell이라면 return
             return;
         }
         if (isLandMineCell(row, col)) {  // 지뢰 cell이라면 return
             return;
         }
         if (NEARBY_LAND_MINE_COUNTS[row][col] != 0) {    // 지뢰 카운트를 갖고 있는 cell이라면 지뢰가 몇 개 있는지 숫자 표시하고 return
-            BOARD[row][col] = String.valueOf(NEARBY_LAND_MINE_COUNTS[row][col]);
+            BOARD[row][col] = Cell.ofNearbyLandMineCount(NEARBY_LAND_MINE_COUNTS[row][col]);   // "String.valueOf(NEARBY_LAND_MINE_COUNTS[row][col])" Cell 내부에 정적 팩토리 메서드로 처리하면 더 깔끔
             return;
         } else {
-            BOARD[row][col] = OPENED_CELL_SIGN;  // 아무것도 아니라면 빈 cell로 표시
+            BOARD[row][col] = Cell.ofOpened();  // 아무것도 아니라면 빈 cell로 표시
         }
         open(row - 1, col - 1);
         open(row - 1, col);
