@@ -1,11 +1,10 @@
 package cleancode.minesweeper.tobe;
 
+import cleancode.minesweeper.tobe.game.GameInitializable;
+import cleancode.minesweeper.tobe.game.GameRunnable;
 import cleancode.minesweeper.tobe.gamelevel.GameLevel;
 import cleancode.minesweeper.tobe.io.ConsoleInputHandler;
 import cleancode.minesweeper.tobe.io.ConsoleOuputHandler;
-
-import java.util.Arrays;
-import java.util.Random;
 
 /**
  * 새로운 요구사항 발생!
@@ -18,7 +17,7 @@ import java.util.Random;
  *
  * 우리 코드에서는 게임판 크기가 상수이기 때문에 OCP를 위반하고 있어 수정이 필요하다
  */
-public class Minesweeper {
+public class Minesweeper implements GameInitializable, GameRunnable {
     public static final int BOARD_ROW_SIZE = 8;
     public static final int BOARD_COL_SIZE = 10;
 
@@ -33,9 +32,14 @@ public class Minesweeper {
         gameBoard = new GameBoard(gameLevel);
     }
 
+    @Override
+    public void initialize() {
+        gameBoard.initializeGame();
+    }
+
+    @Override
     public void run() {
         consoleOutputHandler.showGameStartComments();
-        gameBoard.initializeGame();
 
         while (true) {
             try {
